@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +39,7 @@ void save_courses() {
     fwrite(courses, sizeof(Course), course_count, fp);
     fclose(fp);
 }
+
 void load_courses() {
     FILE *fp = fopen("courses.dat", "rb");
     if (!fp) return;
@@ -45,6 +47,7 @@ void load_courses() {
     fread(courses, sizeof(Course), course_count, fp);
     fclose(fp);
 }
+
 void save_students() {
     FILE *fp = fopen("students.dat", "wb");
     if (!fp) return;
@@ -52,6 +55,7 @@ void save_students() {
     fwrite(students, sizeof(Student), student_count, fp);
     fclose(fp);
 }
+
 void load_students() {
     FILE *fp = fopen("students.dat", "rb");
     if (!fp) return;
@@ -59,6 +63,7 @@ void load_students() {
     fread(students, sizeof(Student), student_count, fp);
     fclose(fp);
 }
+
 void save_enrollments() {
     FILE *fp = fopen("enrollments.dat", "wb");
     if (!fp) return;
@@ -66,6 +71,7 @@ void save_enrollments() {
     fwrite(enrollments, sizeof(Enrollment), enroll_count, fp);
     fclose(fp);
 }
+
 void load_enrollments() {
     FILE *fp = fopen("enrollments.dat", "rb");
     if (!fp) return;
@@ -73,13 +79,14 @@ void load_enrollments() {
     fread(enrollments, sizeof(Enrollment), enroll_count, fp);
     fclose(fp);
 }
+
 void load_all() { load_courses(); load_students(); load_enrollments(); }
 void save_all() { save_courses(); save_students(); save_enrollments(); }
 
 /* ========== 课程管理 ========== */
 void add_course() {
-    if (course_count >= MAX_COURSES) { printf("课程数已达上限！\n"); return; }
     Course c;
+    if (course_count >= MAX_COURSES) { printf("课程数已达上限！\n"); return; }
     printf("课程号: "); scanf("%s", c.id);
     printf("课程名: "); scanf("%s", c.name);
     printf("学分: "); scanf("%d", &c.credits);
@@ -89,18 +96,22 @@ void add_course() {
     save_courses();
     printf("课程添加成功！\n");
 }
+
 void list_courses() {
+    int i;
     if (course_count == 0) { printf("暂无课程信息。\n"); return; }
     printf("\n%-10s %-20s %-6s %-8s %-8s\n", "课程号", "课程名", "学分", "上限", "已选");
-    for (int i = 0; i < course_count; i++)
+    for (i = 0; i < course_count; i++)
         printf("%-10s %-20s %-6d %-8d %-8d\n",
                courses[i].id, courses[i].name, courses[i].credits,
                courses[i].capacity, courses[i].enrolled);
 }
+
 void modify_course() {
-    char id[10]; int found = 0;
+    char id[10];
+    int i, found = 0;
     printf("输入要修改的课程号: "); scanf("%s", id);
-    for (int i = 0; i < course_count; i++) {
+    for (i = 0; i < course_count; i++) {
         if (strcmp(courses[i].id, id) == 0) {
             printf("新课程名(原:%s): ", courses[i].name); scanf("%s", courses[i].name);
             printf("新学分(原:%d): ", courses[i].credits); scanf("%d", &courses[i].credits);
@@ -111,10 +122,12 @@ void modify_course() {
     }
     if (!found) printf("未找到该课程。\n");
 }
+
 void delete_course() {
-    char id[10], confirm[3]; int found = 0;
+    char id[10], confirm[3];
+    int i, j, found = 0;
     printf("输入要删除的课程号: "); scanf("%s", id);
-    for (int i = 0; i < course_count; i++) {
+    for (i = 0; i < course_count; i++) {
         if (strcmp(courses[i].id, id) == 0) {
             printf("确定删除课程 %s(%s) 吗？(y/n): ", courses[i].id, courses[i].name);
             scanf("%s", confirm);
@@ -122,13 +135,16 @@ void delete_course() {
                 printf("已取消删除。\n"); return;
             }
             /* 同时删除该课程的相关选课记录 */
-            int new_enroll_count = 0;
-            for (int j = 0; j < enroll_count; j++) {
-                if (strcmp(enrollments[j].course_id, id) != 0)
-                    enrollments[new_enroll_count++] = enrollments[j];
+            {
+                int new_enroll_count = 0;
+                int j2;
+                for (j2 = 0; j2 < enroll_count; j2++) {
+                    if (strcmp(enrollments[j2].course_id, id) != 0)
+                        enrollments[new_enroll_count++] = enrollments[j2];
+                }
+                enroll_count = new_enroll_count;
             }
-            enroll_count = new_enroll_count;
-            for (int j = i; j < course_count - 1; j++) courses[j] = courses[j + 1];
+            for (j = i; j < course_count - 1; j++) courses[j] = courses[j + 1];
             course_count--;
             save_all();
             printf("课程已删除！\n"); found = 1; break;
@@ -136,10 +152,12 @@ void delete_course() {
     }
     if (!found) printf("未找到该课程。\n");
 }
+
 void query_course_by_id() {
-    char id[10]; int found = 0;
+    char id[10];
+    int i, found = 0;
     printf("输入课程号: "); scanf("%s", id);
-    for (int i = 0; i < course_count; i++) {
+    for (i = 0; i < course_count; i++) {
         if (strcmp(courses[i].id, id) == 0) {
             printf("课程号:%-10s 课程名:%-20s 学分:%d 上限:%d 已选:%d\n",
                    courses[i].id, courses[i].name, courses[i].credits,
@@ -149,10 +167,11 @@ void query_course_by_id() {
     }
     if (!found) printf("未找到该课程。\n");
 }
+
 void query_course_by_credits() {
-    int credits, found = 0;
+    int credits, i, found = 0;
     printf("输入学分: "); scanf("%d", &credits);
-    for (int i = 0; i < course_count; i++) {
+    for (i = 0; i < course_count; i++) {
         if (courses[i].credits == credits) {
             printf("课程号:%-10s 课程名:%-20s 学分:%d 上限:%d 已选:%d\n",
                    courses[i].id, courses[i].name, courses[i].credits,
@@ -165,24 +184,28 @@ void query_course_by_credits() {
 
 /* ========== 学生管理 ========== */
 void add_student() {
-    if (student_count >= MAX_STUDENTS) { printf("学生数已达上限！\n"); return; }
     Student s;
+    if (student_count >= MAX_STUDENTS) { printf("学生数已达上限！\n"); return; }
     printf("学号: "); scanf("%s", s.id);
     printf("姓名: "); scanf("%s", s.name);
     students[student_count++] = s;
     save_students();
     printf("学生添加成功！\n");
 }
+
 void list_students() {
+    int i;
     if (student_count == 0) { printf("暂无学生信息。\n"); return; }
     printf("\n%-15s %-10s\n", "学号", "姓名");
-    for (int i = 0; i < student_count; i++)
+    for (i = 0; i < student_count; i++)
         printf("%-15s %-10s\n", students[i].id, students[i].name);
 }
+
 void modify_student() {
-    char id[15]; int found = 0;
+    char id[15];
+    int i, found = 0;
     printf("输入要修改的学号: "); scanf("%s", id);
-    for (int i = 0; i < student_count; i++) {
+    for (i = 0; i < student_count; i++) {
         if (strcmp(students[i].id, id) == 0) {
             printf("新姓名(原:%s): ", students[i].name); scanf("%s", students[i].name);
             save_students();
@@ -191,10 +214,12 @@ void modify_student() {
     }
     if (!found) printf("未找到该学生。\n");
 }
+
 void delete_student() {
-    char id[15], confirm[3]; int found = 0;
+    char id[15], confirm[3];
+    int i, j, found = 0;
     printf("输入要删除的学号: "); scanf("%s", id);
-    for (int i = 0; i < student_count; i++) {
+    for (i = 0; i < student_count; i++) {
         if (strcmp(students[i].id, id) == 0) {
             printf("确定删除学生 %s(%s) 吗？(y/n): ", students[i].id, students[i].name);
             scanf("%s", confirm);
@@ -202,13 +227,16 @@ void delete_student() {
                 printf("已取消删除。\n"); return;
             }
             /* 同时删除该学生的选课记录 */
-            int new_enroll_count = 0;
-            for (int j = 0; j < enroll_count; j++) {
-                if (strcmp(enrollments[j].student_id, id) != 0)
-                    enrollments[new_enroll_count++] = enrollments[j];
+            {
+                int new_enroll_count = 0;
+                int j2;
+                for (j2 = 0; j2 < enroll_count; j2++) {
+                    if (strcmp(enrollments[j2].student_id, id) != 0)
+                        enrollments[new_enroll_count++] = enrollments[j2];
+                }
+                enroll_count = new_enroll_count;
             }
-            enroll_count = new_enroll_count;
-            for (int j = i; j < student_count - 1; j++) students[j] = students[j + 1];
+            for (j = i; j < student_count - 1; j++) students[j] = students[j + 1];
             student_count--;
             save_all();
             printf("学生已删除！\n"); found = 1; break;
@@ -216,17 +244,18 @@ void delete_student() {
     }
     if (!found) printf("未找到该学生。\n");
 }
+
 void query_student() {
-    char id[15]; int found = 0;
+    char id[15];
+    int i, j, k, found = 0;
     printf("输入学号: "); scanf("%s", id);
-    for (int i = 0; i < student_count; i++) {
+    for (i = 0; i < student_count; i++) {
         if (strcmp(students[i].id, id) == 0) {
             printf("学号:%-15s 姓名:%-10s\n", students[i].id, students[i].name);
-            /* 显示已选课程 */
             printf("已选课程:\n");
-            for (int j = 0; j < enroll_count; j++) {
+            for (j = 0; j < enroll_count; j++) {
                 if (strcmp(enrollments[j].student_id, id) == 0) {
-                    for (int k = 0; k < course_count; k++) {
+                    for (k = 0; k < course_count; k++) {
                         if (strcmp(courses[k].id, enrollments[j].course_id) == 0)
                             printf("  %s %s\n", courses[k].id, courses[k].name);
                     }
@@ -241,33 +270,28 @@ void query_student() {
 /* ========== 选课操作 ========== */
 void select_course() {
     char sid[15], cid[10];
+    int i, j, s_exists = 0;
     printf("学号: "); scanf("%s", sid);
     printf("课程号: "); scanf("%s", cid);
 
-    /* 检查学生是否存在 */
-    int s_exists = 0;
-    for (int i = 0; i < student_count; i++)
+    for (i = 0; i < student_count; i++)
         if (strcmp(students[i].id, sid) == 0) { s_exists = 1; break; }
     if (!s_exists) { printf("学生不存在！\n"); return; }
 
-    /* 检查课程是否存在及容量 */
-    for (int i = 0; i < course_count; i++) {
+    for (i = 0; i < course_count; i++) {
         if (strcmp(courses[i].id, cid) == 0) {
             if (courses[i].enrolled >= courses[i].capacity) {
                 printf("选课失败！课程 %s 已满（上限%d人）\n", cid, courses[i].capacity);
                 return;
             }
-            /* 检查是否已选过 */
-            for (int j = 0; j < enroll_count; j++) {
+            for (j = 0; j < enroll_count; j++) {
                 if (strcmp(enrollments[j].student_id, sid) == 0 &&
                     strcmp(enrollments[j].course_id, cid) == 0) {
                     printf("你已经选过这门课了！\n"); return;
                 }
             }
-            enrollments[enroll_count].student_id[0] = '\0';
-            strcat(enrollments[enroll_count].student_id, sid);
-            enrollments[enroll_count].course_id[0] = '\0';
-            strcat(enrollments[enroll_count].course_id, cid);
+            strcpy(enrollments[enroll_count].student_id, sid);
+            strcpy(enrollments[enroll_count].course_id, cid);
             enroll_count++;
             courses[i].enrolled++;
             save_all();
@@ -277,18 +301,19 @@ void select_course() {
     }
     printf("课程不存在！\n");
 }
+
 void cancel_course() {
     char sid[15], cid[10];
+    int i, k;
     printf("学号: "); scanf("%s", sid);
     printf("课程号: "); scanf("%s", cid);
 
-    for (int i = 0; i < enroll_count; i++) {
+    for (i = 0; i < enroll_count; i++) {
         if (strcmp(enrollments[i].student_id, sid) == 0 &&
             strcmp(enrollments[i].course_id, cid) == 0) {
-            for (int j = i; j < enroll_count - 1; j++) enrollments[j] = enrollments[j + 1];
+            for (i = i; i < enroll_count - 1; i++) enrollments[i] = enrollments[i + 1];
             enroll_count--;
-            /* 减少课程已选人数 */
-            for (int k = 0; k < course_count; k++)
+            for (k = 0; k < course_count; k++)
                 if (strcmp(courses[k].id, cid) == 0) courses[k].enrolled--;
             save_all();
             printf("取消选课成功！\n");
@@ -320,8 +345,8 @@ void main_menu() {
 }
 
 int main() {
-    load_all();
     int op;
+    load_all();
     while (1) {
         main_menu();
         if (scanf("%d", &op) != 1) { while (getchar() != '\n'); continue; }
